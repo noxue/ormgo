@@ -1,14 +1,22 @@
 # ormgo
 
 
-### 用法
+### 功能
+
+* 增删改查
+* 分页查询
+* 查询过滤字段
+* 统计记录数
+* 软删除
+
+### 简单用法
 
 ```go
 package main
 
 import (
 	"fmt"
-	"ormgo"
+	"gopkg.in/noxue/ormgo.v1"
 	"time"
 )
 
@@ -38,13 +46,4 @@ func main() {
 
 **更详细的用法请看example目录下的文件**
 
-
-### 功能
-
-* 增删改查
-* 分页查询
-* 查询过滤字段
-* 统计记录数
-* 软删除
-
-
+## [说明文档](https://godoc.org/gopkg.in/noxue/ormgo.v1)
