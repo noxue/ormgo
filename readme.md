@@ -11,6 +11,12 @@
 
 ### 简单用法
 
+* 安装
+
+    `go get gopkg.in/noxue/ormgo.v1`
+
+* 例子
+
 ```go
 package main
 
