@@ -1,6 +1,7 @@
 package ormgo
 
 import (
+	"errors"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -154,6 +155,10 @@ func (this *Model) Update(selector M, doc M) (err error) {
 }
 
 func (this *Model) UpdateId(id string, doc M) (err error) {
+	if !bson.IsObjectIdHex(id) {
+		err = errors.New("Id格式不正确")
+		return
+	}
 	_, err = update(this.doc, id, doc, false)
 	return
 }
@@ -192,6 +197,10 @@ func FindOne(condition M, selector map[string]bool, doc interface{}) (err error)
 }
 
 func FindById(id string, selector map[string]bool, doc interface{}) (err error) {
+	if !bson.IsObjectIdHex(id) {
+		err = errors.New("Id格式不正确")
+		return
+	}
 	err = find(id, selector, doc)
 	return
 }
@@ -235,12 +244,20 @@ func (this *Model) RemoveTrue(selector M) (err error) {
 
 // 根据文档Id软删除
 func (this *Model) RemoveById(id string) (err error) {
+	if !bson.IsObjectIdHex(id) {
+		err = errors.New("Id格式不正确")
+		return
+	}
 	_, err = remove(this.doc, id, false, false)
 	return
 }
 
 // 根据文档Id真正删除
 func (this *Model) RemoveTrueById(id string) (err error) {
+	if !bson.IsObjectIdHex(id) {
+		err = errors.New("Id格式不正确")
+		return
+	}
 	_, err = remove(this.doc, id, false, true)
 	return
 }
