@@ -150,6 +150,10 @@ func FindAll(query Query, docs interface{}) (err error) {
 
 // 更新满足条件的一个文档
 func (this *Model) Update(selector M, doc M) (err error) {
+	if len(selector) == 0 {
+		err = errors.New("更新文档必须提供条件")
+		return
+	}
 	_, err = update(this.doc, selector, doc, false)
 	return
 }
@@ -204,7 +208,6 @@ func FindById(id string, selector map[string]bool, doc interface{}) (err error) 
 	err = find(id, selector, doc)
 	return
 }
-
 
 func find(condition interface{}, selector map[string]bool, doc interface{}) (err error) {
 	defer func() {
