@@ -196,7 +196,12 @@ func update(collectionType interface{}, selector interface{}, doc M, isUpdateAll
 }
 
 func FindOne(condition M, selector map[string]bool, doc interface{}) (err error) {
-	err = find(condition, selector, doc)
+	err = find(condition, selector, ContainTypeDefault, doc)
+	return
+}
+
+func FindTrueOne(condition M, selector map[string]bool, doc interface{}) (err error) {
+	err = find(condition, selector, All, doc)
 	return
 }
 
@@ -205,11 +210,20 @@ func FindById(id string, selector map[string]bool, doc interface{}) (err error) 
 		err = errors.New("Id格式不正确")
 		return
 	}
-	err = find(id, selector, doc)
+	err = find(M{"_id": bson.ObjectIdHex(id)}, selector, ContainTypeDefault, doc)
 	return
 }
 
-func find(condition interface{}, selector map[string]bool, doc interface{}) (err error) {
+func FindTrueById(id string, selector map[string]bool, doc interface{}) (err error) {
+	if !bson.IsObjectIdHex(id) {
+		err = errors.New("Id格式不正确")
+		return
+	}
+	err = find(M{"_id": bson.ObjectIdHex(id)}, selector, All, doc)
+	return
+}
+
+func find(condition M, selector map[string]bool, contain ContainType, doc interface{}) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(OrmError)
@@ -219,12 +233,19 @@ func find(condition interface{}, selector map[string]bool, doc interface{}) (err
 	defer session.Close()
 	isNil(doc)
 	coll := session.DB(db.dbName).C(getCName(doc))
+
 	var query *mgo.Query
-	if _, ok := condition.(string); ok {
-		query = coll.FindId(bson.ObjectIdHex(condition.(string)))
-	} else {
-		query = coll.Find(condition)
+
+	// 处理软删除
+	if needSoftDelete(doc) {
+		if contain == ContainTypeDefault {
+			condition["deletedat"] = zeroTime
+		} else if contain == DeletedOnly {
+			condition["deletedat"] = M{"$ne": zeroTime}
+		}
 	}
+
+	query = coll.Find(condition)
 
 	if selector != nil && len(selector) > 0 {
 		query.Select(selector)
