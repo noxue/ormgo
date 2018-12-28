@@ -149,7 +149,7 @@ func FindAll(query Query, docs interface{}) (err error) {
 }
 
 // 更新满足条件的一个文档
-func (this *Model) Update(selector M, doc M) (err error) {
+func (this *Model) Update(selector M, doc interface{}) (err error) {
 	if len(selector) == 0 {
 		err = errors.New("更新文档必须提供条件")
 		return
@@ -172,7 +172,7 @@ func (this *Model) UpdateAll(selector M, doc M) (info *mgo.ChangeInfo, err error
 	return
 }
 
-func update(collectionType interface{}, selector interface{}, doc M, isUpdateAll bool) (info *mgo.ChangeInfo, err error) {
+func update(collectionType interface{}, selector interface{}, doc interface{}, isUpdateAll bool) (info *mgo.ChangeInfo, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(OrmError)
