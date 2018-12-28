@@ -205,6 +205,7 @@ func FindById(id string, selector map[string]bool, doc interface{}) (err error) 
 	return
 }
 
+
 func find(condition interface{}, selector map[string]bool, doc interface{}) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
