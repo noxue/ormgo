@@ -158,7 +158,7 @@ func (this *Model) Update(selector M, doc interface{}) (err error) {
 	return
 }
 
-func (this *Model) UpdateId(id string, doc M) (err error) {
+func (this *Model) UpdateId(id string, doc interface{}) (err error) {
 	if !bson.IsObjectIdHex(id) {
 		err = errors.New("Id格式不正确")
 		return
@@ -167,7 +167,7 @@ func (this *Model) UpdateId(id string, doc M) (err error) {
 	return
 }
 
-func (this *Model) UpdateAll(selector M, doc M) (info *mgo.ChangeInfo, err error) {
+func (this *Model) UpdateAll(selector M, doc interface{}) (info *mgo.ChangeInfo, err error) {
 	info, err = update(this.doc, selector, doc, true)
 	return
 }
