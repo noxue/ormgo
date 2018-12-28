@@ -263,6 +263,11 @@ func remove(doc interface{}, selector interface{}, isDeleteAll, isRealDelete boo
 	defer session.Close()
 	coll := session.DB(db.dbName).C(getCName(doc))
 
+	// 如果不需要软删除，直接真正删除
+	if !needSoftDelete(doc){
+		isRealDelete = true
+	}
+
 	doc1 := M{"deletedat": time.Now().UTC()}
 	if _, ok := selector.(string); ok {
 		if isRealDelete {
