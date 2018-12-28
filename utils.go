@@ -2,6 +2,7 @@ package ormgo
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -43,10 +44,32 @@ func needSoftDelete(structName interface{}) (ok bool) {
 // 哪些模型需要软删除
 func UseSoftDelete(docs ...interface{}) {
 	for _, doc := range docs {
-		_,ok:=softDeleteMap[getCName(doc)]
+		_, ok := softDeleteMap[getCName(doc)]
 		if ok {
 			CheckErr(errors.New("UseSoftDelete 无需重复调用"))
 		}
 		softDeleteMap[getCName(doc)] = true
 	}
+}
+
+var (
+	zeroVal  reflect.Value
+	zeroArgs []reflect.Value
+)
+
+// 调用模型的指定方法
+func callToDoc(method string, doc interface{}) error {
+	docV := reflect.ValueOf(doc)
+	if docV.Kind() != reflect.Ptr {
+		e := fmt.Sprintf("ormgo: Passed non-pointer: %v (kind=%v), method:%s", doc, docV.Kind(), method)
+		return errors.New(e)
+	}
+	fn := docV.Elem().Addr().MethodByName(method)
+	if fn != zeroVal {
+		ret := fn.Call(zeroArgs)
+		if len(ret) > 0 && !ret[0].IsNil() {
+			return ret[0].Interface().(error)
+		}
+	}
+	return nil
 }

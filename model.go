@@ -79,13 +79,21 @@ func Save(doc interface{}, docs ...interface{}) (err error) {
 	defer session.Close()
 	d := session.DB(db.dbName)
 
-	err = session.DB(db.dbName).C(getCName(doc)).Insert(doc)
-	CheckErr(err)
+	CheckErr(callToDoc("BeforeSave", doc))
+	{
+		err = session.DB(db.dbName).C(getCName(doc)).Insert(doc)
+		CheckErr(err)
+	}
+	CheckErr(callToDoc("AfterSave", doc))
 
 	// 批量插入
 	for _, v := range docs {
-		err = d.C(getCName(v)).Insert(v)
-		CheckErr(err)
+		CheckErr(callToDoc("BeforeSave", v))
+		{
+			err = d.C(getCName(v)).Insert(v)
+			CheckErr(err)
+		}
+		CheckErr(callToDoc("AfterSave", v))
 	}
 	return
 }
@@ -151,7 +159,6 @@ func (this *Model) UpdateId(id string, doc M) (err error) {
 }
 
 func (this *Model) UpdateAll(selector M, doc M) (info *mgo.ChangeInfo, err error) {
-
 	info, err = update(this.doc, selector, doc, true)
 	return
 }
@@ -264,7 +271,7 @@ func remove(doc interface{}, selector interface{}, isDeleteAll, isRealDelete boo
 	coll := session.DB(db.dbName).C(getCName(doc))
 
 	// 如果不需要软删除，直接真正删除
-	if !needSoftDelete(doc){
+	if !needSoftDelete(doc) {
 		isRealDelete = true
 	}
 

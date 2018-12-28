@@ -14,9 +14,20 @@ import (
 
 type User struct {
 	ormgo.Model `bson:",inline"`
-	Name      string
-	Password  string
-	DeletedAt time.Time
+	Name        string
+	Password    string
+	DeletedAt   time.Time
+}
+
+func (this *User) BeforeSave() (err error) {
+	fmt.Println(this)
+	this.Name = fmt.Sprint("aaa", time.Now().Unix())
+	return
+}
+
+func (this *User) AfterSave() (err error) {
+	fmt.Println(this)
+	return
 }
 
 func init() {
@@ -25,7 +36,7 @@ func init() {
 }
 
 func TestSave(t *testing.T) {
-	user := User{
+	user := &User{
 		Name:     fmt.Sprint("你好", time.Now().Unix()),
 		Password: "密码",
 		//DeletedAt: time.Now().UTC(),
@@ -60,26 +71,26 @@ func TestCount(t *testing.T) {
 
 	// 统计所有
 	query.Contain = ormgo.All
-	n,err := user.Count(query)
+	n, err := user.Count(query)
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println("全部:",n)
+	fmt.Println("全部:", n)
 
 	// 默认查询不包含被软删除的
-	n,err = user.Count(query)
+	n, err = user.Count(query)
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println("默认查询:",n)
+	fmt.Println("默认查询:", n)
 
 	// 统计被软删除的
 	query.Contain = ormgo.DeletedOnly
-	n,err = user.Count(query)
+	n, err = user.Count(query)
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println("已被删除:",n)
+	fmt.Println("已被删除:", n)
 }
 
 func TestSoftDelete(t *testing.T) {
