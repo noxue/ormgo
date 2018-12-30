@@ -172,6 +172,7 @@ func (this *Model) UpdateAll(selector M, doc interface{}) (info *mgo.ChangeInfo,
 	return
 }
 
+// doc 除了具体对象之外，只能是ormgo.M类型
 func update(collectionType interface{}, selector interface{}, doc interface{}, isUpdateAll bool) (info *mgo.ChangeInfo, err error) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -184,12 +185,28 @@ func update(collectionType interface{}, selector interface{}, doc interface{}, i
 	session := db.getSession()
 	defer session.Close()
 
+	// 检测是否是其他自定义操作，通过判断key值是否是$开头
+	isSub := false
+	if _, ok := doc.(M); ok {
+		for key, _ := range doc.(M) {
+			if key[0] == '$' {
+				isSub = true
+				break
+			}
+		}
+	}
+
+	// 如果不是自定义的操作，默认表示是编辑，即$set操作
+	if !isSub {
+		doc = M{"$set": doc}
+	}
+
 	if _, ok := selector.(string); ok {
-		err = session.DB(db.dbName).C(getCName(collectionType)).UpdateId(bson.ObjectIdHex(selector.(string)), M{"$set": doc})
+		err = session.DB(db.dbName).C(getCName(collectionType)).UpdateId(bson.ObjectIdHex(selector.(string)), doc)
 	} else if isUpdateAll {
-		info, err = session.DB(db.dbName).C(getCName(collectionType)).UpdateAll(selector, M{"$set": doc})
+		info, err = session.DB(db.dbName).C(getCName(collectionType)).UpdateAll(selector, doc)
 	} else {
-		err = session.DB(db.dbName).C(getCName(collectionType)).Update(selector, M{"$set": doc})
+		err = session.DB(db.dbName).C(getCName(collectionType)).Update(selector, doc)
 	}
 
 	return
@@ -377,4 +394,12 @@ func (this *Model) Count(query Query) (n int, err error) {
 func GetSession() *mgo.Session {
 
 	return db.getSession()
+}
+
+// 方便执行其他非查询类的代码，比如，添加索引，删除表等等
+func SessionExec(callback func(database *mgo.Database)) {
+	session := db.getSession()
+	defer session.Close()
+
+	callback(session.DB(db.dbName))
 }
